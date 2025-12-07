@@ -7,26 +7,25 @@ export const options = {
       executor: 'ramping-vus',
       startVUs: 0,
       stages: [
-        { duration: '30s', target: 10 }, 
-        { duration: '1m', target: 100 },
+        { duration: '10s', target: 20 },
         { duration: '30s', target: 100 },
+        { duration: '10s', target: 0 },
       ],
-      gracefulRampDown: '0s',
+      gracefulRampDown: '5s',
     },
   },
   thresholds: {
-    http_req_duration: ['p(95)<2000'], 
+    http_req_duration: ['p(95)<2000'],
+    http_req_failed: ['rate<0.01'], 
   },
 };
 
 export default function () {
   const url = 'http://localhost:8080/api/auth/login';
   
-  const randomEmail = `test_user_${__VU}_${__ITER}@example.com`;
-  
   const payload = JSON.stringify({
-    email: randomEmail,
-    password: 'someRandomPassword123!',
+    email: 'test@naver.com',
+    password: 'test1234',
   });
 
   const params = {
@@ -38,7 +37,8 @@ export default function () {
   const res = http.post(url, payload, params);
   
   check(res, {
-    'server handled request': (r) => r.status === 401 || r.status === 200 || r.status === 400,
+    'is status 200 or 401': (r) => r.status === 200 || r.status === 401,
+    'is not server error': (r) => r.status < 500, 
   });
 
   sleep(1); 
